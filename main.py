@@ -13,7 +13,7 @@ class Connections(tk.Tk):
         self.geometry('480x400+400+200')
         self.words = words
         self.submitted = set()
-        self.curr = []
+        self.curr = []  
 
     def start_click(self,start_button):
         start_button.destroy()
@@ -42,7 +42,6 @@ class Connections(tk.Tk):
         return start_btn, self.label1, self.label
     
     def click(self, btn, word):
-
         if sum(group_count.values()) == 4: 
             if btn['bg'] == "#5a594e":
                 for g in groups:
@@ -109,7 +108,8 @@ class Connections(tk.Tk):
             
             del groups[name]
             del group_count[name]
-
+            # if not groups:
+            #     print('end')
         else: 
             if sum(group_count.values()) == 4:
                 if tuple(self.curr) not in self.submitted: 
@@ -120,7 +120,6 @@ class Connections(tk.Tk):
                 else: 
                     self.tried = tk.Label(self, text='Already guessed!',fg="white")
                     self.tried.grid(row = 0, columnspan = 4,  sticky = 'nsew')
-
 
     def Shuffle(self):
         random.shuffle(self.Buttons)
@@ -149,8 +148,10 @@ class Connections(tk.Tk):
             self.Deselect_all()
         else:
             self.results()
+            # self.new_game()
             print('lost the game')
         self.canvas.delete(self.circles.pop())
+        
 
     def results(self):
         r = 1
@@ -159,6 +160,23 @@ class Connections(tk.Tk):
             bt2 = Button(self, text=text, bg=n[1], activebackground = '#efefe6', focusthickness = 0)
             bt2.grid(row = r, columnspan=4, sticky = 'nsew', padx = 6, pady = 6)
             r += 1 
+        
+    def game_end(self):
+        if len(groups) == 0:
+            self.mistakes.destroy()
+    # def new_game(self):
+    #     self.submit_btn.destroy()
+    #     self.Deselect_btn.destroy()
+    #     self.Shuffle_btn.destroy()
+    #     self.circles.remove()
+    #     new_game_btn = Button(self, text='Start new game', bg='black',fg = 'white', activebackground = 'white', focusthickness = 0, width=100, height=45)
+    #     new_game_btn.configure(command=lambda b=new_game_btn: self.start_click(b))
+    #     new_game_btn.grid(row = 2, column=2,  sticky = 'nsew', padx = 6, pady = 6)
+    #     return new_game_btn
+    
+    # def start_again(self, words):
+    #     self.circles = self.create_circles()
+    #     self.bottuns = self.create_buttons(self.words)
 
     def create_buttons(self, words):
         self.tried = tk.Label(self, text='Create four groups of four!',fg="white")
@@ -178,8 +196,8 @@ class Connections(tk.Tk):
                 r += 1
             self.Buttons.append(btn)
 
-        mistakes = tk.Label(self, text="Mistakes Remaining:", fg="#5a594e")
-        mistakes.place(x=95, y=310)
+        self.mistakes = tk.Label(self, text="Mistakes Remaining:", fg="#5a594e")
+        self.mistakes.place(x=95, y=310)
 
         self.submit_btn = Button(self, text='Submit', bg='#ffffff',activebackground = '#ffffff',fg = 'black', focusthickness = 0, command=self.submission)
         self.submit_btn.place(x=300, y=350)
