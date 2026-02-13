@@ -20,9 +20,8 @@ class Connections(tk.Tk):
         self.result_text = []
 
     def read_to_df(self):
-        for sheet_name, dataframe in connections_read.items():
+        for sheet_name, dataframe in self.connections_read.items():
             self.all_groups[sheet_name] = dataframe.to_dict()
-        
         return self.all_groups
     
     def select_words(self):
@@ -32,7 +31,7 @@ class Connections(tk.Tk):
             group = []
 
             for val in self.all_groups[color][name].values():
-                val_clean = str(val).replace(" ", "").upper()
+                val_clean = str(val).strip().upper()
                 group.append(val_clean)
                 self.groups[(name,color)] = group
                 self.group_count[(name,color)] = 0
@@ -40,8 +39,7 @@ class Connections(tk.Tk):
             del self.all_groups[color][name]
         
         self.words = [w for word in self.groups.values() for w in word]
-        print(self.words)
-        return self.words, self.group, self.group_count
+        return self.words, self.groups, self.group_count
     
     def start_click(self,start_button):
         self.read_to_df()
@@ -49,7 +47,7 @@ class Connections(tk.Tk):
         start_button.destroy()
         self.label1.config(image="")
         self.label.destroy()
-        
+
         self.circles = self.create_circles()
         self.buttons = self.create_buttons(self.words)
 
@@ -96,6 +94,9 @@ class Connections(tk.Tk):
                 btn.configure(bg="#efefe6")
 
     def submission(self):
+        if len(self.curr) != 4:
+            return
+        
         flag = False
         name = ''
         group_lst = []
@@ -111,7 +112,7 @@ class Connections(tk.Tk):
                                 b.destroy() 
                                 self.Buttons.remove(b)
                     break
-            
+
         if flag:
             col = 0
             row = 4
@@ -125,7 +126,6 @@ class Connections(tk.Tk):
                     col = 0
                     row -= 1
 
-            print('correct!') 
             count = 5-len(self.groups)    
             text = f"{g[0]} \n {', '.join(group_lst)}"
             result_btn = Button(self, text=text , bg=g[1] ,activebackground = '#efefe6', focusthickness = 0,height=60)
@@ -134,23 +134,31 @@ class Connections(tk.Tk):
             
             del self.groups[name]
             del self.group_count[name]
+            self.curr.clear()
             if not self.groups:
                 self.clean_board()
-                print('end')
 
         else: 
             if sum(self.group_count.values()) == 4:
-                if tuple(self.curr) not in self.submitted: 
-                    self.submitted.add(tuple(self.curr))
+                if (t := tuple(sorted(self.curr))) not in self.submitted: 
+                    self.submitted.add(t)
                     self.mistake()
                     self.curr = []
 
                 else: 
-                    guessed = tk.Label(self, text='Already guessed...',bg='white', fg="black")
-                    guessed.grid(row = 0, columnspan = 5,  sticky = 'nsew')
-                    window.after(1000 ,guessed.destroy)
+                    self.show_tried_message()
                     self.Deselect_all()
 
+
+    def original_top_message(self):
+        self.displayed_text.set('Create four groups of four!')
+        self.tried.config(bg='systemWindowBackgroundColor', fg='white')
+        self.Deselect_all()
+
+    def show_tried_message(self):
+        self.displayed_text.set('Already guessed...')
+        self.tried.config(bg='white', fg='black')
+        window.after(1000 ,self.original_top_message)
 
     def Shuffle(self):
         random.shuffle(self.Buttons)
@@ -174,27 +182,27 @@ class Connections(tk.Tk):
             for g in self.group_count:
                 self.group_count[g] = 0
 
+        self.curr.clear()
+
     def mistake(self):
         if len(self.circles) > 1:
             self.Deselect_all()
         else:
-            self.results()            
+            self.results()
             self.clean_board()
-            print('lost the game')
 
         self.canvas.delete(self.circles.pop())
         
     def clean_board(self):
-        print('new game')
         self.mistakes.destroy()
         self.Deselect_btn.destroy()
         self.Shuffle_btn.destroy()
         self.submit_btn.destroy()
         self.tried.destroy()
-
-        new_game_btn = Button(self, text='Start new game', bg='black',fg = 'white', activebackground = 'white', focusthickness = 0, width=100, height=45)
+        
+        new_game_btn = Button(self, text='Start new game', bg='black',fg = 'white', activebackground = 'white', focusthickness = 0, height=35) 
         new_game_btn.configure(command=lambda b=new_game_btn: self.new_game_click(b))
-        new_game_btn.grid(row = 5, columnspan=2, sticky = 'nsew', padx = 6, pady = 6)
+        new_game_btn.grid(row = 5, column=1, columnspan=2, sticky = 'nsew', padx = 3, pady = 3)
 
     def results(self):
         r = 1
@@ -206,7 +214,6 @@ class Connections(tk.Tk):
             r += 1 
 
     def new_game_click(self,new_game_btn):
-        print('begin')
         new_game_btn.destroy()
         for bt in self.result_text:
             bt.destroy()
@@ -225,7 +232,10 @@ class Connections(tk.Tk):
         self.buttons = self.create_buttons(self.words)
 
     def create_buttons(self, words):
-        self.tried = tk.Label(self, text='Create four groups of four!',fg="white")
+        self.displayed_text = tk.StringVar()
+        self.tried = tk.Label(self, text='',fg="white", textvariable=self.displayed_text)
+        self.displayed_text.set('Create four groups of four!')
+
         self.tried.grid(row = 0, columnspan = 5,  sticky = 'nsew')
         random.shuffle(self.words)
         r,c = 1,0
@@ -233,11 +243,11 @@ class Connections(tk.Tk):
         for w in self.words:
             btn = Button(self, text=w, bg='#efefe6',activebackground = '#efefe6', focusthickness = 0, width=100, height=60)
             btn.configure(command=lambda word = w, b=btn: self.click(b, word))
+            btn.grid(row = r, column = c, sticky = 'nsew', padx = 6, pady = 6)
+             
             if c<3:        
-                btn.grid(row = r, column = c, sticky = 'nsew', padx = 6, pady = 6)
                 c += 1
             else: 
-                btn.grid(row = r, column = c, sticky = 'nsew', padx = 6, pady = 6)
                 c = 0
                 r += 1
             self.Buttons.append(btn)
