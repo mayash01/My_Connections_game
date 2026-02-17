@@ -59,3 +59,5 @@ python connections.py
 - **Deselect All** — Clear current selection
 - **Submit** — Check if selected words form a group
 
+## License
+MIT
